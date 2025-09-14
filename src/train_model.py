@@ -144,8 +144,7 @@ def cross_validate(model, X, y, k=5):
 
 def train(data_path, models_dir):
     """
-    Uses cross-validation to find the best model, then retrains it on all
-    data and saves all experimented models.
+    Trains multiple regression models and saves them to models dir.
     """
     print("Loading and preprocessing data...")
     X, y = preprocess_data(data_path, feature_key='avg_purchase_value')
@@ -157,50 +156,31 @@ def train(data_path, models_dir):
 
     # Model config for experimentation
     model_configs = {
-        "LinearRegression": LinearRegression(learning_rate=0.009, n_iterations=500),
-        "L2_l0.01": L2Regression(learning_rate=0.1, n_iterations=500, l=0.02),
-        "L2_l0.1": L2Regression(learning_rate=0.01, n_iterations=1000, l=0.3),  
-        "L1_l0.01": L1Regression(learning_rate=0.01, n_iterations=1000, l=1),
+        "LinearRegression": LinearRegression(learning_rate=0.01, n_iterations=1000),
+        "L2_l0.01": L2Regression(learning_rate=1, n_iterations=1000, l=2),
+        "L2_l0.1": L2Regression(learning_rate=0.01, n_iterations=1000, l=0.3),
+        "L1_l0.01": L1Regression(learning_rate=0.01, n_iterations=1000, l=0.01),
     }
 
-    best_model_name = None
-    best_model_instance = None
-    best_model_score = float('inf') # Initialize with infinity
-
-    print("Starting Cross Validation")
-    for name, model in model_configs.items():
-        print(f"\nEvaluating {name}...")
-        avg_rmse = cross_validate(model, X_np, y_np, k=5)
-        print(f"Average RMSE for {name}: {avg_rmse:.4f}")
-
-        if avg_rmse < best_model_score:
-            best_model_score = avg_rmse
-            best_model_name = name
-            best_model_instance = model
-
-    print(f"\nCross Validation Complete")
-    print(f"Best model found: {best_model_name} with an average RMSE of {best_model_score:.4f}")
-
-    # Re train the Best Model on the full dataset to avoid overfitting
-    print(f"\nRe training the best model ({best_model_name}) on all data...")
-    best_model_instance.fit(X_np, y_np)
-
-    # Save All Models
-    print("\nSaving models")
-    model_files = ["regression_model1.pkl", "regression_model2.pkl", "regression_model3.pkl"]
-    other_models = {k: v for k, v in model_configs.items() if k != best_model_name}
+    print("Training models...")
     
-    # Save the other models
-    for (name, model), filename in zip(other_models.items(), model_files):
-        model.fit(X_np, y_np) # Retrain on all data
+    # Train all models and save them
+    model_files = ["regression_model1.pkl", "regression_model2.pkl", "regression_model3.pkl", "regression_model_final.pkl"]
+    
+    for (name, model), filename in zip(model_configs.items(), model_files):
+        print(f"\nTraining {name}...")
+        model.fit(X_np, y_np)
+        
+        # Calculate and print training metrics
+        y_pred = model.predict(X_np)
+        mse, rmse, r2 = calculate_metrics(y_np, y_pred)
+        print(f"Training RMSE: {rmse:.4f}, R^2: {r2:.4f}")
+        
         with open(f"{models_dir}/{filename}", 'wb') as f:
             pickle.dump(model, f)
         print(f"Saved {name} to {filename}")
 
-    # Save the best model as 'final'
-    with open(f"{models_dir}/regression_model_final.pkl", 'wb') as f:
-        pickle.dump(best_model_instance, f)
-    print(f"Saved best model ({best_model_name}) to regression_model_final.pkl")
+    print("\nAll models trained and saved successfully!")
 
 
 if __name__ == '__main__':

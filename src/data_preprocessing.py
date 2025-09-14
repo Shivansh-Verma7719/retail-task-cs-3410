@@ -95,6 +95,17 @@ def preprocess_data(data_path, feature_key):
     print("Loading CSV data...")
     df = pd.read_csv(data_path)
 
+    # Column dropping section
+    cols_to_drop = ['transaction_id', 'product_id', 'product_category', 'loyalty_program','payment_method', 'transaction_hour', 'day_of_week', 'week_of_year', 'month_of_year', 'last_purchase_date', 'product_rating', 'product_review_count', 'product_weight', 'product_stock', 'product_return_rate', 'product_manufacture_date', 'product_expiry_date', 'product_shelf_life', 'promotion_id', 'promotion_start_date', 'promotion_end_date', 'promotion_target_audience', 'customer_support_calls', 'customer_zip_code', 'store_zip_code', 'store_city', 'store_state', 'customer_state', 'customer_city', 'education_level', 'discount_applied', 'avg_discount_used', 'avg_items_per_transaction', 'avg_transaction_value', 'total_returned_items', 'total_returned_value', 'max_single_purchase_value', 'min_single_purchase_value', 'product_name', 'product_brand', 'product_size', 'product_color', 'product_material', 'promotion_type', 'promotion_effectiveness', 'promotion_channel', 'holiday_season', 'season', 'weekend', 'email_subscriptions', 'app_usage', 'website_visits', 'social_media_engagement', 'days_since_last_purchase', 'preferred_store', 'transaction_date']
+    df = df.drop(columns=cols_to_drop, errors='ignore', axis=1)
+
+    print(f"Dropped columns: {len(cols_to_drop)}")
+
+    # Rows dropping section (dropping by half for testing)
+    initial_row_count = len(df)
+    df = df.sample(frac=0.5, random_state=42)
+    print(f"Dropped rows: {initial_row_count - len(df)}")
+
     # Clean column names (remove leading/trailing spaces)
     df.columns = df.columns.str.strip()
 
